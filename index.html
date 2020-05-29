@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>AtCoder Synchronicity</title>
+	<title>AtCoder シンクロ率</title>
 	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 	<style type="text/css">
 		* {
@@ -38,11 +38,14 @@
 </head>
 
 <body>
-	User 1<input type="text" id="user1" spellcheck="false"><br>
-	User 2<input type="text" id="user2" spellcheck="false"><br>
-	<input type="submit" id="submit" value="Submit"
-		onclick="location.href='#/'+document.getElementById('user1').value+'/'+document.getElementById('user2').value;"><br>
+	<form>
+		User 1<input type="text" id="user1" spellcheck="false"><br>
+		User 2<input type="text" id="user2" spellcheck="false"><br>
+		<input type="submit" id="submit" value="Submit"
+			onclick="location.href='#/'+document.getElementById('user1').value+'/'+document.getElementById('user2').value;"><br>
+	</form>
 	<span id="res"></span><br>
+	<a id="tweet" target="_blank"></a><br>
 	<div id="chart" style="width: 600px; height: 600px"></div>
 	<script type="text/javascript">
 		google.load('visualization', '1', { 'packages': ['corechart'] });
@@ -109,6 +112,9 @@
 			if (data.length == 0) {
 				document.getElementById("res").innerHTML = "シンクロ率を計算できませんでした";
 				return;
+			} else if (data.length <= 2) {
+				document.getElementById("res").innerHTML = "計算に用いることのできるサンプル数が少なすぎるみたいです";
+				return;
 			}
 			let ave = [0.0, 0.0];
 			for (let dat in data) {
@@ -130,7 +136,7 @@
 			diff[1] = Math.sqrt(diff[1]);
 			con /= data.length;
 			let ans = con / (diff[0] * diff[1]);
-			document.getElementById("res").innerHTML = user1 + "さんと" + user2 + "さんのシンクロ率は" + (ans * 100).toFixed(2) + "%です！";
+			document.getElementById("res").innerHTML = user1 + " さんと " + user2 + " さんのシンクロ率は " + (ans * 100).toFixed(2) + " %です！";
 			let arr = new google.visualization.DataTable();
 			arr.addColumn("number", user1);
 			arr.addColumn("number", user2);
@@ -141,6 +147,11 @@
 			let options = { hAxis: { title: user1 }, vAxis: { title: user2 }, legend: 'none' };
 			let chart = new google.visualization.ScatterChart(document.getElementById("chart"));
 			chart.draw(arr, options);
+			document.getElementById("tweet").innerHTML = "結果をつぶやく";
+			let tweetText = document.getElementById("res").innerHTML + "\n";
+			tweetText += "https://phocom.github.io/atcoder-synchronicity/#/" + user1 + "/" + user2;
+			tweetText += " #AtCoderシンクロ率";
+			document.getElementById("tweet").href = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweetText);
 		}
 	</script>
 </body>
