@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>AtCoder Synchronicity</title>
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<style type="text/css">
+		* {
+			margin: 8px;
+			font-family: Arial, sans-serif;
+		}
+
+		:focus {
+			outline: none;
+		}
+
+		input[type="text"] {
+			padding: 4px;
+			border-radius: 4px;
+			border: 2px solid #bfbfbf;
+		}
+
+		input[type="text"]:focus {
+			box-shadow: 0 0 4px #7f7fff;
+		}
+
+		input[type="submit"] {
+			padding: 4px;
+			border-radius: 4px;
+			border: 2px solid #bfbfbf;
+		}
+
+		input[type="submit"]:hover {
+			box-shadow: 0 0 4px #7f7fff;
+		}
+	</style>
+</head>
+
+<body>
+	User 1<input type="text" id="user1" spellcheck="false"><br>
+	User 2<input type="text" id="user2" spellcheck="false"><br>
+	<input type="submit" id="submit" value="Submit"><br>
+	<span id="res"></span><br>
+	<div id="chart" style="width: 600px; height: 600px"></div>
+	<script type="text/javascript">
+		google.load('visualization', '1', { 'packages': ['corechart'] });
+		const proxy = "https://1d878d9b.us-south.apigw.appdomain.cloud/proxy?url=";
+		let user1Contests, user2Contests;
+		let data;
+		let load1, load2;
+		let user1, user2;
+		function ajax(url, success) {
+			let req = new XMLHttpRequest();
+			req.onload = (function () {
+				success(JSON.parse(req.response.response));
+			});
+			req.open("GET", proxy + url);
+			req.responseType = "json";
+			req.send();
+		}
+		document.getElementById("submit").onclick = function () {
+			user1Contests = {};
+			user2Contests = {};
+			data = [];
+			load1 = false;
+			load2 = false;
+			user1 = document.getElementById("user1").value;
+			user2 = document.getElementById("user2").value;
+			document.getElementById("res").innerHTML = "Loading...";
+			ajax("https://atcoder.jp/users/" + user1 + "/history/json", function (res) {
+				for (let i in res) {
+					let contest = res[i];
+					if (contest.IsRated == true) {
+						user1Contests[contest.ContestName] = contest.Performance;
+					}
+				}
+				load1 = true;
+				if (load2) calc();
+			});
+			ajax("https://atcoder.jp/users/" + user2 + "/history/json", function (res) {
+				for (let i in res) {
+					let contest = res[i];
+					if (contest.IsRated == true) {
+						user2Contests[contest.ContestName] = contest.Performance;
+					}
+				}
+				load2 = true;
+				if (load1) calc();
+			});
+		};
+		function calc() {
+			for (let contest in user1Contests) {
+				if (user2Contests[contest]) {
+					data.push([user1Contests[contest], user2Contests[contest], contest]);
+				}
+			} if (data.length == 0) {
+				document.getElementById("res").innerHTML = "シンクロ率を計算できませんでした";
+				return;
+			}
+			let ave = [0.0, 0.0];
+			for (let dat in data) {
+				ave[0] += data[dat][0];
+				ave[1] += data[dat][1];
+			}
+			ave[0] /= data.length;
+			ave[1] /= data.length;
+			let diff = [0.0, 0.0];
+			let con = 0.0;
+			for (let dat in data) {
+				diff[0] += (ave[0] - data[dat][0]) ** 2;
+				diff[1] += (ave[1] - data[dat][1]) ** 2;
+				con += (ave[0] - data[dat][0]) * (ave[1] - data[dat][1]);
+			}
+			diff[0] /= data.length;
+			diff[1] /= data.length;
+			diff[0] = Math.sqrt(diff[0]);
+			diff[1] = Math.sqrt(diff[1]);
+			con /= data.length;
+			let ans = con / (diff[0] * diff[1]);
+			document.getElementById("res").innerHTML = user1 + "さんと" + user2 + "さんのシンクロ率は" + (ans * 100).toFixed(2) + "%です！";
+			let arr = new google.visualization.DataTable();
+			arr.addColumn("number", user1);
+			arr.addColumn("number", user2);
+			arr.addColumn({ type: "string", role: "tooltip" });
+			for (let dat in data) {
+				arr.addRow(data[dat]);
+			}
+			let options = { hAxis: { title: user1 }, vAxis: { title: user2 }, legend: 'none' };
+			let chart = new google.visualization.ScatterChart(document.getElementById("chart"));
+			chart.draw(arr, options);
+		}
+	</script>
+</body>
+
+</html>
