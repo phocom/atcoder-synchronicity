@@ -40,7 +40,8 @@
 <body>
 	User 1<input type="text" id="user1" spellcheck="false"><br>
 	User 2<input type="text" id="user2" spellcheck="false"><br>
-	<input type="submit" id="submit" value="Submit"><br>
+	<input type="submit" id="submit" value="Submit"
+		onclick="location.href='#/'+document.getElementById('user1').value+'/'+document.getElementById('user2').value;"><br>
 	<span id="res"></span><br>
 	<div id="chart" style="width: 600px; height: 600px"></div>
 	<script type="text/javascript">
@@ -59,7 +60,7 @@
 			req.responseType = "json";
 			req.send();
 		}
-		document.getElementById("submit").onclick = function () {
+		function reload() {
 			user1Contests = {};
 			user2Contests = {};
 			data = [];
@@ -89,12 +90,23 @@
 				if (load1) calc();
 			});
 		};
+		window.addEventListener("load", () => {
+			if (location.hash.length > 2) {
+				document.getElementById("user1").value = location.hash.split("/")[1];
+				document.getElementById("user2").value = location.hash.split("/")[2];
+				reload();
+			}
+		});
+		window.addEventListener("hashchange", () => {
+			reload();
+		});
 		function calc() {
 			for (let contest in user1Contests) {
 				if (user2Contests[contest]) {
 					data.push([user1Contests[contest], user2Contests[contest], contest]);
 				}
-			} if (data.length == 0) {
+			}
+			if (data.length == 0) {
 				document.getElementById("res").innerHTML = "シンクロ率を計算できませんでした";
 				return;
 			}
